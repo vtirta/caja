@@ -1,5 +1,5 @@
 [package]
-name = "counter"
+name = "caja"
 version = "0.1.0"
 authors = ["Vic Tirta <vtirta@gmail.com>"]
 edition = "2018"
