@@ -106,6 +106,8 @@ pub fn try_redeem(
 
     let escrow = ESCROWS.load(deps.storage, &code)?;
 
+    ESCROWS.remove(deps.storage, &code);
+
     Ok(Response::new()
         .add_messages(vec![CosmosMsg::Bank(BankMsg::Send {
             to_address: info.sender.to_string(),
