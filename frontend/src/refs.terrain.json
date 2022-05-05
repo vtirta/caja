@@ -1,7 +1,7 @@
 {
   "localterra": {
     "caja": {
-      "codeId": "12",
+      "codeId": "11",
       "contractAddresses": {
         "default": "terra1l09lzlktar3m0hth59z3se86fsyz084map2yln"
       }
@@ -9,7 +9,7 @@
   },
   "testnet": {
     "caja": {
-      "codeId": "69909",
+      "codeId": "69906",
       "contractAddresses": {
         "default": "terra153he0f5ykcsh00rclgat5zjjzzcljmjz2e7nw5"
       }

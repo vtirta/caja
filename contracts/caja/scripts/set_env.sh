@@ -1,0 +1,2 @@
+SIGNER=owner
+CONTRACT_NAME=caja
