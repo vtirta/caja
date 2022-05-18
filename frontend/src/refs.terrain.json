@@ -14,5 +14,13 @@
         "default": "terra153he0f5ykcsh00rclgat5zjjzzcljmjz2e7nw5"
       }
     }
+  },
+  "mainnet": {
+    "caja": {
+      "codeId": "5482",
+      "contractAddresses": {
+        "default": "terra1pn8zdxjwszz53k7h2jjj62jdzudffvrc0tuymf"
+      }
+    }
   }
 }
