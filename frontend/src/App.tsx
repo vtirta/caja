@@ -1,83 +1,88 @@
-import './App.css'
-import { useEffect, useState } from 'react'
-import {
-  useWallet,
-  useConnectedWallet,
-  WalletStatus,
-} from '@terra-money/wallet-provider'
+import React from 'react';
+import {Container, Grid} from "@mui/material";
+import NavBar from './components/NavBar';
+import DispenserWidget from "./components/DispenserWidget";
+import RedeemWidget from './components/RedeemWidget';
+// import {ConnectSample} from './components/ConnectSample';
+// import {CW20TokensSample} from './components/CW20TokensSample';
+// import {NetworkSample} from './components/NetworkSample';
+// import {QuerySample} from './components/QuerySample';
+// import {SignBytesSample} from './components/SignBytesSample';
+// import {SignSample} from './components/SignSample';
+// import {TxSample} from './components/TxSample';
+// import WalletHoldingsWidget from "./components/WalletHoldingsWidget";
+import {ThemeProvider, createTheme} from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import './App.css';
 
-import * as execute from './contract/execute'
-import * as query from './contract/query'
-import { ConnectWallet } from './components/ConnectWallet'
+const fonts = [
+    'Press Start 2P',
+    'Open Sans',
+    '-apple-system',
+    'BlinkMacSystemFont',
+    '"Segoe UI"',
+    'Roboto',
+    '"Helvetica Neue"',
+    'Arial',
+    'sans-serif',
+    '"Apple Color Emoji"',
+    '"Segoe UI Emoji"',
+    '"Segoe UI Symbol"',
+];
 
-const App = () => {
-  const [count, setCount] = useState(null)
-  const [updating, setUpdating] = useState(true)
-  const [resetValue, setResetValue] = useState(0)
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#003FFF',
+        },
+        secondary: {
+            main: '#FFC000',
+        },
+        background: {
+            default: "#303030"
+        }
+    },
+    typography: {
+        // In Chinese and Japanese the characters are usually larger,
+        // so a smaller fontsize may be appropriate.
+        fontFamily: fonts.join(','),
+        button: {
+            fontFamily: fonts.join(','),
+            textTransform: 'none'
+        },
+        fontSize: 14,
+    },
+});
 
-  const { status } = useWallet()
+function App() {
+    return (
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline/>
+            <NavBar/>
+            <Container sx={{flexGrow: 1}} style={{marginTop: 50}}>
+                <Grid container justifyContent="center" spacing={2}>
+                    <Grid item>
+                        <DispenserWidget/>
+                    </Grid>
+                    <Grid item>
+                        <RedeemWidget/>
+                    </Grid>
+                    {/*<Grid item xs={4}>*/}
+                    {/*    <WalletHoldingsWidget/>*/}
+                    {/*</Grid>*/}
+                </Grid>
+            </Container>
 
-  const connectedWallet = useConnectedWallet()
-
-  useEffect(() => {
-    const prefetch = async () => {
-      if (connectedWallet) {
-        const { count } : any = await query.getCount(connectedWallet)
-        setCount(count) 
-      }
-      setUpdating(false)
-    }
-    prefetch()
-  }, [connectedWallet])
-
-  const onClickIncrement = async () => {
-    if (connectedWallet) {
-      setUpdating(true)
-      await execute.increment(connectedWallet)
-      const { count } : any = await query.getCount(connectedWallet)
-      setCount(count)
-      setUpdating(false)
-    }
-  }
-
-  const onClickReset = async () => {
-    if (connectedWallet) {
-      setUpdating(true)
-      console.log(resetValue)
-      await execute.reset(connectedWallet, resetValue)
-      const { count } : any = await query.getCount(connectedWallet)
-      setCount(count)
-      setUpdating(false)
-    }
-  }
-
-  return (
-    <div className="App">
-      <header className="App-header">
-        <div style={{ display: 'inline' }}>
-          COUNT: {count} {updating ? '(updating . . .)' : ''}
-          <button onClick={onClickIncrement} type="button">
-            {' '}
-            +{' '}
-          </button>
-        </div>
-        {status === WalletStatus.WALLET_CONNECTED && (
-          <div style={{ display: 'inline' }}>
-            <input
-              type="number"
-              onChange={(e) => setResetValue(+e.target.value)}
-              value={resetValue}
-            />
-            <button onClick={onClickReset} type="button">
-              {' '}
-              reset{' '}
-            </button>
-          </div>
-        )}
-      </header>
-      <ConnectWallet />
-    </div>
-  )
+            {/*<ConnectSample/>*/}
+            {/*<QuerySample/>*/}
+            {/*<TxSample/>*/}
+            {/*<SignSample/>*/}
+            {/*<SignBytesSample/>*/}
+            {/*<CW20TokensSample/>*/}
+            {/*<NetworkSample/>*/}
+        </ThemeProvider>
+    );
 }
 
-export default App
+export default App;

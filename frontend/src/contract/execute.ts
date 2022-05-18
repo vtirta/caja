@@ -1,6 +1,6 @@
-import { ConnectedWallet } from "@terra-dev/use-wallet";
-import { LCDClient, MsgExecuteContract, Fee } from "@terra-money/terra.js";
-import { contractAdress } from "./address";
+import {ConnectedWallet} from "@terra-money/use-wallet";
+import {LCDClient, MsgExecuteContract, Fee, Coins} from "@terra-money/terra.js";
+import {contractAddress} from "./address";
 
 // ==== utils ====
 
@@ -8,45 +8,51 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const until = Date.now() + 1000 * 60 * 60;
 const untilInterval = Date.now() + 1000 * 60;
 
-const _exec = (msg: any, fee = new Fee(200000, { uluna: 10000 })) =>
-  async (wallet: ConnectedWallet) => {
-    const lcd = new LCDClient({
-      URL: wallet.network.lcd,
-      chainID: wallet.network.chainID,
-    });
-    console.log('msg', msg)
+const _exec = (contract: string, msg: any, coinAmount?: number, fee = new Fee(1000000, {uusd: 200000})) =>
+    async (wallet: ConnectedWallet) => {
+        const lcd = new LCDClient({
+            URL: wallet.network.lcd,
+            chainID: wallet.network.chainID,
+        });
+        console.log('msg', msg)
+        // console.log('contract', contract)
 
-    const { result } = await wallet.post({
-      fee,
-      msgs: [
-        new MsgExecuteContract(
-          wallet.walletAddress,
-          contractAdress(wallet),
-          msg
-        ),
-      ],
-    });
+        let coins = coinAmount ? new Coins({uusd: coinAmount * 1000000}) : undefined;
 
-    while (true) {
-      try {
-        return await lcd.tx.txInfo(result.txhash);
-      } catch (e) {
-        if (Date.now() < untilInterval) {
-          await sleep(500);
-        } else if (Date.now() < until) {
-          await sleep(1000 * 10);
-        } else {
-          throw new Error(
-            `Transaction queued. To verify the status, please check the transaction hash: ${result.txhash}`
-          );
+        const {result} = await wallet.post({
+            fee,
+            msgs: [
+                new MsgExecuteContract(
+                    wallet.walletAddress,
+                    contractAddress(wallet, contract),
+                    msg,
+                    coins,
+                ),
+            ],
+        });
+
+        while (true) {
+            try {
+                return await lcd.tx.txInfo(result.txhash);
+            } catch (e) {
+                if (Date.now() < untilInterval) {
+                    await sleep(500);
+                } else if (Date.now() < until) {
+                    await sleep(1000 * 10);
+                } else {
+                    throw new Error(
+                        `Transaction queued. To verify the status, please check the transaction hash: ${result.txhash}`
+                    );
+                }
+            }
         }
-      }
-    }
-  };
+    };
 
 // ==== execute contract ====
 
-export const increment = _exec({ increment: {} });
+export const dispense = async (wallet: ConnectedWallet, code: string, amount: number) =>
+    _exec("caja", {dispense: {code}}, amount)(wallet);
 
-export const reset = async (wallet: ConnectedWallet, count: number) =>
-  _exec({ reset: { count } })(wallet);
+export const redeem = async (wallet: ConnectedWallet, code: string) =>
+    _exec("caja", {redeem: {code}})(wallet);
+

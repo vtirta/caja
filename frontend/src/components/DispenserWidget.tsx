@@ -1,0 +1,122 @@
+import React, {useEffect, useState} from 'react';
+import {Coins} from "@terra-money/terra.js";
+import {useConnectedWallet, useLCDClient} from '@terra-money/wallet-provider';
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    InputAdornment,
+    TextField
+} from "@mui/material";
+import LoadingButton from '@mui/lab/LoadingButton';
+
+import * as execute from '../contract/execute';
+import {generateCode} from "../utils/helpers";
+
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+
+const DispenserWidget = () => {
+    const connectedWallet = useConnectedWallet();
+    const lcd = useLCDClient();
+    const [updating, setUpdating] = useState(false)
+    const [bank, setBank] = useState<Coins | null>(null);
+    const [code, setCode] = useState("")
+    const [amount, setAmount] = useState(5)
+    useEffect(() => {
+        if (connectedWallet) {
+            lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
+                setBank(coins);
+            });
+        } else {
+            setBank(null);
+        }
+    }, [connectedWallet, lcd]);
+
+    const onClickDispense = async () => {
+        if (connectedWallet) {
+            let newCode = generateCode(8);
+            setUpdating(true);
+            await execute.dispense(connectedWallet, newCode, amount);
+            setUpdating(false);
+            setCode(newCode);
+            // alert(`Redeem Code: ${newCode}`);
+        }
+    }
+
+    return (
+        <Card sx={{minWidth: 200, maxWidth: 400}}>
+            <CardContent sx={{textAlign: 'center'}}>
+                <h2>Generate Code</h2>
+                {connectedWallet && (
+                    <div style={{display: 'inline'}}>
+                        <TextField id="outlined-basic"
+                                   variant="outlined"
+                                   fullWidth
+                                   InputProps={{
+                                       style: {fontSize: 30},
+                                       startAdornment: <InputAdornment position="start"><span
+                                           style={{fontSize: 30}}>$</span></InputAdornment>,
+                                       endAdornment: <InputAdornment position="end"><span
+                                           style={{fontSize: 30}}>UST</span></InputAdornment>,
+                                   }}
+                                   InputLabelProps={{style: {fontSize: 30}}}
+                                   onChange={(e) => setAmount(+e.target.value)}
+                                   onFocus={event => {
+                                       event.target.select();
+                                   }}
+                                   value={amount}/>
+                        {!updating &&
+                            <Button variant="contained" size="large" disableElevation fullWidth
+                                    onClick={onClickDispense}
+                                    style={{fontFamily: 'Press Start 2P', fontSize: 30}}
+                                    sx={{marginTop: 2}}>
+                                Deposit
+                            </Button>
+                        }
+
+                        {updating &&
+                            <LoadingButton loading variant="outlined" size="large" disableElevation
+                                           fullWidth
+                                           style={{fontFamily: 'Press Start 2P', fontSize: 30}}
+                                           sx={{marginTop: 2}}>
+                                Depositing ...
+                            </LoadingButton>
+                        }
+                    </div>
+                )}
+                <Dialog
+                    fullWidth
+                    open={!!code}
+                    // onClose={handleClose}
+                >
+                    <DialogContent>
+                        <h1>Cash code generated</h1>
+                        <p style={{fontSize: 20}}>Give this URL/code to a friend, a street musician, a hotel
+                            housekeeper, church offering box, or wherever $cash is needed!</p>
+                        <Button
+                            onClick={() => {
+                                navigator.clipboard.writeText(`http://localhost:3000/redeem/${code}`)
+                            }}
+                            startIcon={<ContentCopyIcon/>}
+                            variant="outlined" size="large" sx={{
+                            fontSize: 24,
+                            color: 'white',
+                            borderColor: 'white',
+                        }}>http://localhost:3000/redeem/{code}</Button>
+                        <p style={{fontStyle: 'italic'}}>NOTE: Unclaimed code will be returned to your wallet after
+                            3 days.</p>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="contained" onClick={() => setCode("")}>Done, I wrote it down!</Button>
+                    </DialogActions>
+                </Dialog>
+            </CardContent>
+        </Card>
+    )
+}
+
+export default DispenserWidget;
