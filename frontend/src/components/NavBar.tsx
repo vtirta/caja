@@ -29,8 +29,8 @@ const NavBar = ({linkCode}: { linkCode: string }) => {
     return (
         <AppBar position="static" color={'transparent'} elevation={0}>
             <Container maxWidth="xl">
-                <Box sx={{flexGrow: 1, justifyContent: 'center', display: {xs: 'flex', md: 'none'}}}>
-                    <h1 style={{textAlign: 'center'}}><img src={marioCoin} alt={'Logo'} width={50}/>caja.money</h1>
+                <Box sx={{flexGrow: 1, justifyContent: 'center', verticalAlign: 'center', display: {xs: 'flex', md: 'none'}}}>
+                    <h1 style={{textAlign: 'center'}}>caja <img src={marioCoin} alt={'Logo'} width={50}/> money</h1>
                 </Box>
                 <Toolbar disableGutters>
                     <Box sx={{display: {xs: 'none', md: 'flex'}}}>

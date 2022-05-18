@@ -35,7 +35,7 @@ const WalletHoldings = ({bank}: WalletProps) => {
 
     return (
         <>
-            <h2>My Wallet</h2>
+            <h2 style={{fontSize: 16}}>My Wallet</h2>
             {
                 bank &&
                 <TableContainer>

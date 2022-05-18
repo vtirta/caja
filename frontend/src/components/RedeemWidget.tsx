@@ -14,6 +14,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 import * as execute from '../contract/execute';
 import Typography from "@mui/material/Typography";
+import {generateCode, hash} from "../utils/helpers";
 
 const RedeemWidget = ({linkCode}: { linkCode: string }) => {
     const connectedWallet = useConnectedWallet();
@@ -41,8 +42,11 @@ const RedeemWidget = ({linkCode}: { linkCode: string }) => {
                 return;
             }
 
+            const hashedCode = await hash(code);
+            console.log("Redeem Code", code, hashedCode);
+
             setUpdating(true);
-            await execute.redeem(connectedWallet, code);
+            await execute.redeem(connectedWallet, hashedCode);
             setUpdating(false);
             setAmount(5);
         } else {

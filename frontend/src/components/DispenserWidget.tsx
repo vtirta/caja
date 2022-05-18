@@ -15,7 +15,7 @@ import {
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import * as execute from '../contract/execute';
-import {generateCode} from "../utils/helpers";
+import {generateCode, hash} from "../utils/helpers";
 
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -39,12 +39,13 @@ const DispenserWidget = () => {
 
     const onClickDispense = async () => {
         if (connectedWallet) {
-            let newCode = generateCode(8);
+            const newCode = generateCode(8);
+            const hashedCode = await hash(newCode);
+            console.log("Code", newCode, hashedCode);
             setUpdating(true);
-            await execute.dispense(connectedWallet, newCode, amount);
+            await execute.dispense(connectedWallet, hashedCode, amount);
             setUpdating(false);
             setCode(newCode);
-            // alert(`Redeem Code: ${newCode}`);
         } else {
             alert('Please connect a terra wallet to deposit UST to generate cash link')
         }
@@ -100,7 +101,7 @@ const DispenserWidget = () => {
                         <h1>Code generated</h1>
                         <Button
                             onClick={() => {
-                                navigator.clipboard.writeText(`${code}`)
+                                navigator.clipboard.writeText(`https://caja.money/${code}`)
                             }}
                             // startIcon={<ContentCopyIcon/>}
                             variant="outlined" size="large" sx={{
