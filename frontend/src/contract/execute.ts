@@ -16,8 +16,9 @@ const _exec = (contract: string, msg: any, coinAmount?: number, fee = new Fee(10
         });
         console.log('msg', msg)
         // console.log('contract', contract)
-
-        let coins = coinAmount ? new Coins({uusd: coinAmount * 1000000}) : undefined;
+        const amtInMicroUnit = coinAmount ? parseFloat((coinAmount * 1000000).toFixed(4)) : 0;
+        console.log('amtInMicroUnit', amtInMicroUnit);
+        let coins = coinAmount ? new Coins({uusd: amtInMicroUnit}) : undefined;
 
         const {result} = await wallet.post({
             fee,

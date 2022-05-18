@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useMatch} from "react-router-dom";
 import {Container, Grid, Link} from "@mui/material";
 import NavBar from './components/NavBar';
@@ -12,9 +12,15 @@ import RedeemWidget from './components/RedeemWidget';
 // import {SignSample} from './components/SignSample';
 // import {TxSample} from './components/TxSample';
 // import WalletHoldingsWidget from "./components/WalletHoldingsWidget";
+import WalletContext, {Wallet} from './components/Wallet';
+import BankContext from './components/Bank';
+import {useConnectedWallet, useLCDClient} from '@terra-money/wallet-provider';
+import {Coins} from "@terra-money/terra.js";
+
 import {ThemeProvider, createTheme} from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import './App.css';
+import {ConnectedWallet} from "@terra-money/use-wallet";
 
 const fonts = [
     'Press Start 2P',
@@ -56,83 +62,115 @@ const darkTheme = createTheme({
     },
 });
 
+// interface Wallet {
+//     connectedWallet: ConnectedWallet|undefined;
+//     bank: Coins|undefined;
+// }
+
 function App() {
     let match = useMatch("/:code");
     const code = match?.params.code || "";
-
     const [showRedeem, setShowRedeem] = useState(!!code);
 
+    const connectedWallet = useConnectedWallet();
+    const lcd = useLCDClient();
+    const [wallet, setWallet] = useState<ConnectedWallet | undefined>(undefined);
+    const [bank, setBank] = useState<Coins | null>(null);
+
+    const refreshBalance = () => {
+        if (connectedWallet) {
+            lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
+                setBank(coins);
+            });
+        }
+    }
+
+    useEffect(() => {
+        // setWallet(connectedWallet);
+        if (connectedWallet) {
+            lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
+                setBank(coins);
+            });
+        } else {
+            setBank(null);
+        }
+    }, [connectedWallet, lcd]);
+
     return (
-        <ThemeProvider theme={darkTheme}>
-            <CssBaseline/>
+        <BankContext.Provider value={{bank, refreshBalance}}>
+            <ThemeProvider theme={darkTheme}>
+                <CssBaseline/>
 
-            <NavBar linkCode={code}/>
+                <NavBar linkCode={code}/>
 
-            <Container sx={{flexGrow: 1}} style={{marginTop: 50}}>
+                <Container sx={{flexGrow: 1}} style={{marginTop: 50}}>
 
-                <Grid container justifyContent="center" spacing={2}>
-                    {!showRedeem &&
+                    <Grid container justifyContent="center" spacing={2}>
+                        {!showRedeem &&
+                            <Grid item sx={{textAlign: 'center'}}>
+                                <DispenserWidget/>
+                                <p>[<Link href="#" onClick={() => setShowRedeem(!showRedeem)}>I have code to
+                                    redeem</Link>]</p>
+                            </Grid>
+                        }
+                        {showRedeem &&
+                            <Grid item sx={{textAlign: 'center'}}>
+                                <RedeemWidget linkCode={code}/>
+                                <p>[<Link href="#" onClick={() => setShowRedeem(!showRedeem)}>I want to send
+                                    money</Link>]</p>
+                            </Grid>
+                        }
+                    </Grid>
+
+
+                    <Grid container justifyContent="center" sx={{marginTop: 10}}>
                         <Grid item sx={{textAlign: 'center'}}>
-                            <DispenserWidget/>
-                            <p>[<Link href="#" onClick={() => setShowRedeem(!showRedeem)}>I have code to redeem</Link>]</p>
+                            <h2>What is Caja?</h2>
+                            <p>Give money to anyone using a link</p>
                         </Grid>
-                    }
-                    {showRedeem &&
+                    </Grid>
+
+                    <Grid container justifyContent="center" sx={{marginTop: 10}}>
                         <Grid item sx={{textAlign: 'center'}}>
-                            <RedeemWidget linkCode={code}/>
-                            <p>[<Link href="#" onClick={() => setShowRedeem(!showRedeem)}>I want to send money</Link>]</p>
+                            <h2>How it works</h2>
+                            <ol style={{textAlign: 'left'}}>
+                                <li>Connect your wallet [<Link href="#wallet">Don't have one?</Link>]</li>
+                                <li>Deposit UST [<Link href="#ust">What is UST?</Link>]</li>
+                                <li>Share generated link</li>
+                                <li>Anyone with link can redeem</li>
+                            </ol>
                         </Grid>
-                    }
-                </Grid>
-
-
-                <Grid container justifyContent="center" sx={{marginTop: 10}}>
-                    <Grid item sx={{textAlign: 'center'}}>
-                        <h2>What is Caja?</h2>
-                        <p>Give money to anyone using a link</p>
                     </Grid>
-                </Grid>
 
-                <Grid container justifyContent="center" sx={{marginTop: 10}}>
-                    <Grid item sx={{textAlign: 'center'}}>
-                        <h2>How it works</h2>
-                        <ol style={{textAlign: 'left'}}>
-                            <li>Connect your wallet [<Link href="#wallet">Don't have one?</Link>]</li>
-                            <li>Deposit UST [<Link href="#ust">What is UST?</Link>]</li>
-                            <li>Share generated link</li>
-                            <li>Anyone with link can redeem</li>
-                        </ol>
+                    <Grid container justifyContent="center" sx={{marginTop: 10}}>
+                        <Grid item sx={{textAlign: 'center'}}>
+                            <a id="wallet"><h2>Setup Terra Wallet</h2></a>
+                            <iframe width="640" height="480" src={'https://www.youtube.com/embed/4gnFM1CFbOk'}
+                                    frameBorder="0"
+                                    allowFullScreen title="How to setup a wallet video"/>
+                        </Grid>
                     </Grid>
-                </Grid>
 
-                <Grid container justifyContent="center" sx={{marginTop: 10}}>
-                    <Grid item sx={{textAlign: 'center'}}>
-                        <a id="wallet"><h2>Setup Terra Wallet</h2></a>
-                        <iframe width="640" height="480" src={'https://www.youtube.com/embed/4gnFM1CFbOk'}
-                                frameBorder="0"
-                                allowFullScreen title="How to setup a wallet video"/>
+                    <Grid container justifyContent="center" sx={{marginTop: 10}}>
+                        <Grid item sx={{textAlign: 'center'}}>
+                            <a id="ust"><h2>What is UST / Luna?</h2></a>
+                            <iframe width="640" height="480" src={'https://www.youtube.com/embed/U9lrH0loAns'}
+                                    frameBorder="0"
+                                    allowFullScreen title="How to setup a wallet video"/>
+                        </Grid>
                     </Grid>
-                </Grid>
 
-                <Grid container justifyContent="center" sx={{marginTop: 10}}>
-                    <Grid item sx={{textAlign: 'center'}}>
-                        <a id="ust"><h2>What is UST / Luna?</h2></a>
-                        <iframe width="640" height="480" src={'https://www.youtube.com/embed/U9lrH0loAns'}
-                                frameBorder="0"
-                                allowFullScreen title="How to setup a wallet video"/>
-                    </Grid>
-                </Grid>
+                </Container>
 
-            </Container>
-
-            {/*<ConnectSample/>*/}
-            {/*<QuerySample/>*/}
-            {/*<TxSample/>*/}
-            {/*<SignSample/>*/}
-            {/*<SignBytesSample/>*/}
-            {/*<CW20TokensSample/>*/}
-            {/*<NetworkSample/>*/}
-        </ThemeProvider>
+                {/*<ConnectSample/>*/}
+                {/*<QuerySample/>*/}
+                {/*<TxSample/>*/}
+                {/*<SignSample/>*/}
+                {/*<SignBytesSample/>*/}
+                {/*<CW20TokensSample/>*/}
+                {/*<NetworkSample/>*/}
+            </ThemeProvider>
+        </BankContext.Provider>
     );
 }
 

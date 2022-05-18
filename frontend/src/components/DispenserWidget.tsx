@@ -1,8 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {Coins} from "@terra-money/terra.js";
-import {useConnectedWallet, useLCDClient} from '@terra-money/wallet-provider';
+import React, {useContext, useState} from 'react';
+import {useConnectedWallet} from '@terra-money/wallet-provider';
 import {
-    Box,
     Button,
     Card,
     CardContent,
@@ -17,35 +15,67 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import * as execute from '../contract/execute';
 import {generateCode, hash} from "../utils/helpers";
 
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import BankContext from "./Bank";
+
+const fee = 0.25;
 
 const DispenserWidget = () => {
     const connectedWallet = useConnectedWallet();
-    const lcd = useLCDClient();
     const [updating, setUpdating] = useState(false)
-    const [bank, setBank] = useState<Coins | null>(null);
+    const { bank, refreshBalance} = useContext(BankContext);
     const [code, setCode] = useState("")
     const [amount, setAmount] = useState(5)
 
-    useEffect(() => {
-        if (connectedWallet) {
-            lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
-                setBank(coins);
-            });
-        } else {
-            setBank(null);
-        }
-    }, [connectedWallet, lcd]);
-
     const onClickDispense = async () => {
         if (connectedWallet) {
+
+            if (!bank) {
+                return alert("Unable to load wallet");
+            }
+
+            if (bank?.get('uusd')?.amount.lessThanOrEqualTo((amount+fee)*1000000)) {
+                return alert("You don't have enough UST in your wallet");
+            }
+
             const newCode = generateCode(8);
             const hashedCode = await hash(newCode);
-            console.log("Code", newCode, hashedCode);
+
             setUpdating(true);
-            await execute.dispense(connectedWallet, hashedCode, amount);
-            setUpdating(false);
-            setCode(newCode);
+            try {
+                console.log(amount);
+                const result = await execute.dispense(connectedWallet, hashedCode, amount+fee);
+
+                refreshBalance();
+
+                const successLog = result?.logs;
+                console.log(successLog);
+
+                if (successLog && successLog.length > 0) {
+                    setCode(newCode);
+                    const uusdString: string | undefined = successLog.at(0)?.events?.at(0)?.attributes?.at(1)?.value;
+                    if (uusdString) {
+                        const amtStr = uusdString.slice(0, -4);
+                        const amt = +amtStr;
+                        console.log(amtStr);
+                        const amountSpent: number = amt / 1000000;
+                        setAmount(amountSpent);
+                    } else {
+                        setAmount(-1);
+                    }
+                } else {
+                    console.error("Contract Execute error", result?.raw_log);
+                    if (result?.raw_log.includes('insufficient funds')) {
+                        alert("Insufficient funds, please try a smaller amount");
+                    } else {
+                        alert("Sorry, something went wrong");
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setUpdating(false);
+            }
         } else {
             alert('Please connect a terra wallet to deposit UST to generate cash link')
         }
@@ -58,6 +88,8 @@ const DispenserWidget = () => {
 
                 <div style={{display: 'inline'}}>
                     <TextField id="outlined-basic"
+                               type="number"
+                               inputProps={{ inputMode: 'numeric', pattern: '[1-9]\\d*' }}
                                variant="outlined"
                                fullWidth
                                InputProps={{
@@ -68,28 +100,31 @@ const DispenserWidget = () => {
                                        style={{fontSize: 30}}>UST</span></InputAdornment>,
                                }}
                                InputLabelProps={{style: {fontSize: 30}}}
-                               onChange={(e) => setAmount(+e.target.value)}
+                               onChange={(e) => {
+                                   const amt = +e.target.value;
+                                   if (isNaN(amt) || amt < 1) {
+                                       setAmount(1);
+                                   } else {
+                                       setAmount(+e.target.value);
+                                   }
+                               }}
                                onFocus={event => {
                                    event.target.select();
                                }}
                                value={amount}/>
-                    {!updating &&
-                        <Button variant="contained" size="large" disableElevation fullWidth
-                                onClick={onClickDispense}
-                                style={{fontFamily: 'Press Start 2P', fontSize: 30}}
-                                sx={{marginTop: 2}}>
-                            Deposit
-                        </Button>
-                    }
 
-                    {updating &&
-                        <LoadingButton loading variant="outlined" size="large" disableElevation
+                        <LoadingButton variant="contained" size="large" disableElevation
+                                       endIcon={<AttachMoneyIcon />}
+                                       loading={updating}
+                                       loadingPosition="end"
                                        fullWidth
                                        style={{fontFamily: 'Press Start 2P', fontSize: 30}}
-                                       sx={{marginTop: 2}}>
-                            Depositing ...
+                                       sx={{marginTop: 2}}
+                                       onClick={onClickDispense}
+                        >
+                            Deposit
                         </LoadingButton>
-                    }
+                        <p>Fee: {fee} UST</p>
                 </div>
 
                 <Dialog
@@ -97,8 +132,12 @@ const DispenserWidget = () => {
                     open={!!code}
                     // onClose={handleClose}
                 >
-                    <DialogContent>
-                        <h1>Code generated</h1>
+                    <DialogContent sx={{textAlign: 'center'}}>
+                        <h1>Woohoo!</h1>
+
+                        <p style={{fontSize: 20}}>UST {(amount-fee).toFixed(2)} + {fee}(fees)</p>
+                        <p style={{fontSize: 14}}>deposited into link:</p>
+
                         <Button
                             onClick={() => {
                                 navigator.clipboard.writeText(`https://caja.money/${code}`)
@@ -109,14 +148,14 @@ const DispenserWidget = () => {
                             color: 'white',
                             borderColor: 'white',
                         }}>https://caja.money/{code}</Button>
-                        <p style={{fontSize: 14}}>Give this URL/code to a friend, a street musician, a hotel
-                            housekeeper, church offering box, or wherever $cash is needed!</p>
+                        {/*<p style={{fontSize: 14}}>Give this URL/code to a friend, a street musician, a hotel*/}
+                        {/*    housekeeper, church offering box, or wherever $cash is needed!</p>*/}
                         <p style={{fontSize: 12, fontStyle: 'italic'}}>NOTE: Unclaimed code will be returned to your
                             wallet after
                             3 days.</p>
                     </DialogContent>
                     <DialogActions>
-                        <Button variant="contained" onClick={() => setCode("")}>Done, I wrote it down!</Button>
+                        <Button variant="contained" onClick={() => { setCode(""); setAmount(5)}}>Done - I wrote it down!</Button>
                     </DialogActions>
                 </Dialog>
             </CardContent>

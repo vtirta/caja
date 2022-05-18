@@ -1,6 +1,5 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Coins} from "@terra-money/terra.js";
-import {useConnectedWallet, useLCDClient, useWallet, WalletStatus} from '@terra-money/wallet-provider';
+import React, {useContext, useRef, useState} from 'react';
+import {useConnectedWallet, useWallet, WalletStatus} from '@terra-money/wallet-provider';
 
 import {
     ButtonGroup,
@@ -21,9 +20,10 @@ import TerraIcon from '../img/terra-logo-only-small.svg';
 import WalletConnectIcon from '../img/wallet-connect-icon.svg';
 import GenericWalletIcon from '../img/generic-wallet.svg';
 import WalletHoldings from "./WalletHoldings";
+import BankContext from "./Bank";
 
 const formatWalletAddress = (s: string) => {
-    return s.slice(5, 10) + '...' + s.slice(39);
+    return s.slice(5, 9) + '...' + s.slice(40);
 }
 
 const ConnectedWalletButton = () => {
@@ -31,17 +31,7 @@ const ConnectedWalletButton = () => {
         disconnect,
     } = useWallet();
     const connectedWallet = useConnectedWallet();
-    const lcd = useLCDClient();
-    const [bank, setBank] = useState<Coins | null>(null);
-    useEffect(() => {
-        if (connectedWallet) {
-            lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
-                setBank(coins);
-            });
-        } else {
-            setBank(null);
-        }
-    }, [connectedWallet, lcd]);
+    const {bank,} = useContext(BankContext);
 
     const inputEl = useRef(null);
 
@@ -56,7 +46,8 @@ const ConnectedWalletButton = () => {
 
     return (
         <>
-            <ButtonGroup ref={inputEl} className="connected-wallet-btn" variant="contained" style={{borderRadius: 50}} color="secondary"
+            <ButtonGroup ref={inputEl} className="connected-wallet-btn" variant="contained" style={{borderRadius: 50}}
+                         color="secondary"
                          aria-label="outlined secondary button group">
                 <Button onClick={handleClick}>
                     <img src={TerraIcon} width={25} alt={'Terra icon'} style={{marginRight: 8}}/>
