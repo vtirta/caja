@@ -79,7 +79,7 @@ const RedeemWidget = ({linkCode}: { linkCode: string }) => {
     return (
         <Card sx={{minWidth: 200, maxWidth: 400}}>
             <CardContent sx={{textAlign: 'center'}}>
-                <h2>Redeem Code</h2>
+                <h2>Redeem Link</h2>
 
                 <div style={{display: 'inline'}}>
                     <TextField id="outlined-basic"
