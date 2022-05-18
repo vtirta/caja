@@ -56,8 +56,8 @@ const ConnectedWalletButton = () => {
 
     return (
         <>
-            <ButtonGroup ref={inputEl} className="connected-wallet-btn" variant="contained" style={{borderRadius: 50}}
-                         aria-label="outlined primary button group">
+            <ButtonGroup ref={inputEl} className="connected-wallet-btn" variant="contained" style={{borderRadius: 50}} color="secondary"
+                         aria-label="outlined secondary button group">
                 <Button onClick={handleClick}>
                     <img src={TerraIcon} width={25} alt={'Terra icon'} style={{marginRight: 8}}/>
                     {connectedWallet?.walletAddress ? formatWalletAddress(connectedWallet.walletAddress) : ''}
@@ -84,7 +84,7 @@ const ConnectedWalletButton = () => {
                 <Box textAlign='center'
                      sx={{minWidth: 400, paddingTop: 0, paddingLeft: 2, paddingRight: 2, paddingBottom: 2}}>
                     <WalletHoldings bank={bank}/>
-                    <Button variant="contained" size="medium" color="primary" aria-label="add" sx={{marginTop: 2}}
+                    <Button variant="contained" size="medium" color="secondary" aria-label="add" sx={{marginTop: 2}}
                             onClick={() => disconnect()}>Disconnect</Button>
                 </Box>
             </Popover>
@@ -137,7 +137,7 @@ const ConnectWallet = () => {
     return (
         <div>
             {status === WalletStatus.WALLET_NOT_CONNECTED && (
-                <Fab variant="extended" size="medium" color="primary" aria-label="add" onClick={handleClick}>
+                <Fab variant="extended" size="medium" color="secondary" aria-label="add" onClick={handleClick}>
                     <AccountBalanceWalletIcon sx={{mr: 1}}/>
                     Connect wallet
                 </Fab>

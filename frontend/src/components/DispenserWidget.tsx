@@ -26,6 +26,7 @@ const DispenserWidget = () => {
     const [bank, setBank] = useState<Coins | null>(null);
     const [code, setCode] = useState("")
     const [amount, setAmount] = useState(5)
+
     useEffect(() => {
         if (connectedWallet) {
             lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
@@ -44,6 +45,8 @@ const DispenserWidget = () => {
             setUpdating(false);
             setCode(newCode);
             // alert(`Redeem Code: ${newCode}`);
+        } else {
+            alert('Please connect a terra wallet to deposit UST to generate cash link')
         }
     }
 
@@ -51,63 +54,64 @@ const DispenserWidget = () => {
         <Card sx={{minWidth: 200, maxWidth: 400}}>
             <CardContent sx={{textAlign: 'center'}}>
                 <h2>Generate Code</h2>
-                {connectedWallet && (
-                    <div style={{display: 'inline'}}>
-                        <TextField id="outlined-basic"
-                                   variant="outlined"
-                                   fullWidth
-                                   InputProps={{
-                                       style: {fontSize: 30},
-                                       startAdornment: <InputAdornment position="start"><span
-                                           style={{fontSize: 30}}>$</span></InputAdornment>,
-                                       endAdornment: <InputAdornment position="end"><span
-                                           style={{fontSize: 30}}>UST</span></InputAdornment>,
-                                   }}
-                                   InputLabelProps={{style: {fontSize: 30}}}
-                                   onChange={(e) => setAmount(+e.target.value)}
-                                   onFocus={event => {
-                                       event.target.select();
-                                   }}
-                                   value={amount}/>
-                        {!updating &&
-                            <Button variant="contained" size="large" disableElevation fullWidth
-                                    onClick={onClickDispense}
-                                    style={{fontFamily: 'Press Start 2P', fontSize: 30}}
-                                    sx={{marginTop: 2}}>
-                                Deposit
-                            </Button>
-                        }
 
-                        {updating &&
-                            <LoadingButton loading variant="outlined" size="large" disableElevation
-                                           fullWidth
-                                           style={{fontFamily: 'Press Start 2P', fontSize: 30}}
-                                           sx={{marginTop: 2}}>
-                                Depositing ...
-                            </LoadingButton>
-                        }
-                    </div>
-                )}
+                <div style={{display: 'inline'}}>
+                    <TextField id="outlined-basic"
+                               variant="outlined"
+                               fullWidth
+                               InputProps={{
+                                   style: {fontSize: 30},
+                                   startAdornment: <InputAdornment position="start"><span
+                                       style={{fontSize: 30}}>$</span></InputAdornment>,
+                                   endAdornment: <InputAdornment position="end"><span
+                                       style={{fontSize: 30}}>UST</span></InputAdornment>,
+                               }}
+                               InputLabelProps={{style: {fontSize: 30}}}
+                               onChange={(e) => setAmount(+e.target.value)}
+                               onFocus={event => {
+                                   event.target.select();
+                               }}
+                               value={amount}/>
+                    {!updating &&
+                        <Button variant="contained" size="large" disableElevation fullWidth
+                                onClick={onClickDispense}
+                                style={{fontFamily: 'Press Start 2P', fontSize: 30}}
+                                sx={{marginTop: 2}}>
+                            Deposit
+                        </Button>
+                    }
+
+                    {updating &&
+                        <LoadingButton loading variant="outlined" size="large" disableElevation
+                                       fullWidth
+                                       style={{fontFamily: 'Press Start 2P', fontSize: 30}}
+                                       sx={{marginTop: 2}}>
+                            Depositing ...
+                        </LoadingButton>
+                    }
+                </div>
+
                 <Dialog
                     fullWidth
                     open={!!code}
                     // onClose={handleClose}
                 >
                     <DialogContent>
-                        <h1>Cash code generated</h1>
-                        <p style={{fontSize: 20}}>Give this URL/code to a friend, a street musician, a hotel
-                            housekeeper, church offering box, or wherever $cash is needed!</p>
+                        <h1>Code generated</h1>
                         <Button
                             onClick={() => {
-                                navigator.clipboard.writeText(`http://localhost:3000/redeem/${code}`)
+                                navigator.clipboard.writeText(`${code}`)
                             }}
-                            startIcon={<ContentCopyIcon/>}
+                            // startIcon={<ContentCopyIcon/>}
                             variant="outlined" size="large" sx={{
-                            fontSize: 24,
+                            fontSize: 18,
                             color: 'white',
                             borderColor: 'white',
-                        }}>http://localhost:3000/redeem/{code}</Button>
-                        <p style={{fontStyle: 'italic'}}>NOTE: Unclaimed code will be returned to your wallet after
+                        }}>https://caja.money/{code}</Button>
+                        <p style={{fontSize: 14}}>Give this URL/code to a friend, a street musician, a hotel
+                            housekeeper, church offering box, or wherever $cash is needed!</p>
+                        <p style={{fontSize: 12, fontStyle: 'italic'}}>NOTE: Unclaimed code will be returned to your
+                            wallet after
                             3 days.</p>
                     </DialogContent>
                     <DialogActions>

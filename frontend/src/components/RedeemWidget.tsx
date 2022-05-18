@@ -2,31 +2,27 @@ import React, {useEffect, useState} from 'react';
 import {Coins} from "@terra-money/terra.js";
 import {useConnectedWallet, useLCDClient} from '@terra-money/wallet-provider';
 import {
-    Box,
     Button,
     Card,
     CardContent,
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
-    InputAdornment,
     TextField
 } from "@mui/material";
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import * as execute from '../contract/execute';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Typography from "@mui/material/Typography";
 
-const RedeemWidget = () => {
+const RedeemWidget = ({linkCode}: { linkCode: string }) => {
     const connectedWallet = useConnectedWallet();
     const lcd = useLCDClient();
     const [updating, setUpdating] = useState(false)
     const [bank, setBank] = useState<Coins | null>(null);
     const [amount, setAmount] = useState(0);
     const [price, setPrice] = useState(0.05);
-    const [code, setCode] = useState("")
+    const [code, setCode] = useState(linkCode);
     useEffect(() => {
         if (connectedWallet) {
             lcd.bank.balance(connectedWallet.walletAddress).then(([coins]) => {
@@ -39,10 +35,18 @@ const RedeemWidget = () => {
 
     const onClickRedeem = async () => {
         if (connectedWallet) {
+
+            if (!code) {
+                alert('Please enter a code to redeem');
+                return;
+            }
+
             setUpdating(true);
             await execute.redeem(connectedWallet, code);
             setUpdating(false);
             setAmount(5);
+        } else {
+            alert('Please connect a terra wallet to redeem a cash link')
         }
     }
 
@@ -50,42 +54,41 @@ const RedeemWidget = () => {
         <Card sx={{minWidth: 200, maxWidth: 400}}>
             <CardContent sx={{textAlign: 'center'}}>
                 <h2>Redeem Code</h2>
-                {connectedWallet && (
-                    <div style={{display: 'inline'}}>
-                        <TextField id="outlined-basic"
-                                   variant="outlined"
-                                   fullWidth
-                                   color="secondary"
-                                   InputProps={{
-                                       style: {fontSize: 30},
-                                   }}
-                                   InputLabelProps={{style: {fontSize: 30}}}
-                                   onChange={(e) => setCode(e.target.value)}
-                                   onFocus={event => {
-                                       event.target.select();
-                                   }}
-                                   placeholder="Enter code"
-                                   value={code}/>
-                        {!updating &&
-                            <Button variant="contained" size="large" disableElevation fullWidth
-                                    onClick={onClickRedeem}
-                                    color="secondary"
-                                    style={{fontSize: 30}}
-                                    sx={{marginTop: 2}}>
-                                Redeem
-                            </Button>
-                        }
 
-                        {updating &&
-                            <LoadingButton loading variant="outlined" size="large" disableElevation
-                                           fullWidth
-                                           style={{fontSize: 30}}
-                                           sx={{marginTop: 2}}>
-                                Redeeming your coins...
-                            </LoadingButton>
-                        }
-                    </div>
-                )}
+                <div style={{display: 'inline'}}>
+                    <TextField id="outlined-basic"
+                               variant="outlined"
+                               fullWidth
+                               color="secondary"
+                               InputProps={{
+                                   style: {fontSize: 30},
+                               }}
+                               InputLabelProps={{style: {fontSize: 30}}}
+                               onChange={(e) => setCode(e.target.value)}
+                               onFocus={event => {
+                                   event.target.select();
+                               }}
+                               placeholder="Enter code"
+                               value={code}/>
+                    {!updating &&
+                        <Button variant="contained" size="large" disableElevation fullWidth
+                                onClick={onClickRedeem}
+                                color="primary"
+                                style={{fontSize: 30}}
+                                sx={{marginTop: 2}}>
+                            Redeem
+                        </Button>
+                    }
+
+                    {updating &&
+                        <LoadingButton loading variant="outlined" size="large" disableElevation
+                                       fullWidth
+                                       style={{fontSize: 30}}
+                                       sx={{marginTop: 2}}>
+                            Redeeming your coins...
+                        </LoadingButton>
+                    }
+                </div>
                 <Dialog
                     fullWidth
                     open={!!amount}
