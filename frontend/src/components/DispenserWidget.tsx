@@ -1,6 +1,7 @@
 import React, {useContext, useState} from 'react';
 import {useConnectedWallet} from '@terra-money/wallet-provider';
 import {
+    Box,
     Button,
     Card,
     CardContent,
@@ -84,7 +85,7 @@ const DispenserWidget = () => {
     return (
         <Card sx={{minWidth: 200, maxWidth: 400}}>
             <CardContent sx={{textAlign: 'center'}}>
-                <h2>Generate Code</h2>
+                <h2>Send Money Link</h2>
 
                 <div style={{display: 'inline'}}>
                     <TextField id="outlined-basic"
@@ -129,30 +130,39 @@ const DispenserWidget = () => {
 
                 <Dialog
                     fullWidth
+                    maxWidth="xs"
                     open={!!code}
                     // onClose={handleClose}
                 >
                     <DialogContent sx={{textAlign: 'center'}}>
-                        <h1>Woohoo!</h1>
+                        <h1>Deposited</h1>
 
                         <p style={{fontSize: 20}}>UST {(amount-fee).toFixed(2)} + {fee}(fees)</p>
-                        <p style={{fontSize: 14}}>deposited into link:</p>
+                        <p style={{fontSize: 14}}>into link</p>
 
                         <Button
                             onClick={() => {
                                 navigator.clipboard.writeText(`https://caja.money/${code}`)
                             }}
-                            // startIcon={<ContentCopyIcon/>}
                             variant="outlined" size="large" sx={{
-                            fontSize: 18,
+                            fontSize: 16,
                             color: 'white',
                             borderColor: 'white',
-                        }}>https://caja.money/{code}</Button>
+                        }}>
+                            <Box sx={{display: {xs: 'none', md: 'flex'}}}>
+                                https://caja.money/{code}
+                            </Box>
+                            <Box sx={{display: {xs: 'flex', md: 'none'}}}>
+                                https://caja.money<br/>/{code}
+                            </Box>
+                        </Button>
+
+
                         {/*<p style={{fontSize: 14}}>Give this URL/code to a friend, a street musician, a hotel*/}
                         {/*    housekeeper, church offering box, or wherever $cash is needed!</p>*/}
-                        <p style={{fontSize: 12, fontStyle: 'italic'}}>NOTE: Unclaimed code will be returned to your
-                            wallet after
-                            3 days.</p>
+                        {/*<p style={{fontSize: 12, fontStyle: 'italic'}}>NOTE: Unclaimed code will be returned to your*/}
+                        {/*    wallet after*/}
+                        {/*    3 days.</p>*/}
                     </DialogContent>
                     <DialogActions>
                         <Button variant="contained" onClick={() => { setCode(""); setAmount(5)}}>Done - I wrote it down!</Button>
